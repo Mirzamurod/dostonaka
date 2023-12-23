@@ -154,7 +154,7 @@ export default function Home() {
                 </div>
                 {isLoading ? (
                   'Loading...'
-                ) : (
+                ) : !isLoading && orders?.length ? (
                   <div className='block w-full overflow-x-auto'>
                     <table className='divide-y divide-gray-700 text-white w-full min-w-full'>
                       <thead>
@@ -264,6 +264,8 @@ export default function Home() {
                       </tbody>
                     </table>
                   </div>
+                ) : (
+                  'No data'
                 )}
               </div>
             </div>
