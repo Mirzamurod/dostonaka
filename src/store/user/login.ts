@@ -58,6 +58,7 @@ const login = createSlice({
       state.user = payload
     },
     deleteUser: state => {
+      state.isError = false
       state.user = null
       state.token = false
     },
