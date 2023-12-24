@@ -1,6 +1,7 @@
 export type ClientDataType = {
   name: string
   price: number | string
+  show: boolean
   createdAt: string
   updatedAt: string
   _id: string

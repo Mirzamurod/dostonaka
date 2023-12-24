@@ -124,7 +124,7 @@ const AddClient = () => {
               Orqaga
             </Link>
             <Button className='w-full' isLoading={isLoading}>
-              Qo'shish
+              Saqlash
             </Button>
           </div>
         </form>

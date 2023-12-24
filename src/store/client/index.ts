@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit'
 import { addclient, clients, deleteclient, editclient, project } from '@/store/apis'
-import { IClientStore } from '@/types/client'
+import { ClientDataType, IClientStore } from '@/types/client'
 
 const initialState: IClientStore = {
   isLoading: false,
@@ -82,7 +82,10 @@ export const addClient = (data: { name: string; price: string }) =>
     onFail: login.actions.onFailAddEditClient.type,
   })
 
-export const editClient = (data: { name: string; price: string }, id: string) =>
+export const editClient = (
+  data: { name: string; price: number | string; show?: boolean },
+  id: string
+) =>
   project({
     url: editclient,
     method: 'put',

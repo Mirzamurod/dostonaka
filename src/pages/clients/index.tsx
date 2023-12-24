@@ -1,9 +1,11 @@
+import { getSum } from '@/components/funcs'
 import { RootState } from '@/store'
-import { getClients } from '@/store/client'
+import { editClient, getClients } from '@/store/client'
+import { ClientDataType } from '@/types/client'
 import { Switch } from '@headlessui/react'
 import { encode } from 'js-base64'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import ReactPaginate from 'react-paginate'
 import { useDispatch, useSelector } from 'react-redux'
 
@@ -13,19 +15,19 @@ function classNames(...classes: any) {
 
 const Clients = () => {
   const dispatch = useDispatch()
-  const [open, setOpen] = useState(false)
-  const [id, setId] = useState('')
 
-  const { isLoading, clients } = useSelector((state: RootState) => state.client)
+  const { isLoading, clients, success } = useSelector((state: RootState) => state.client)
 
   useEffect(() => {
     dispatch(getClients())
   }, [])
 
-  const deleteClient = (id: string) => {
-    setId(id)
-    setOpen(true)
-  }
+  useEffect(() => {
+    if (success) dispatch(getClients())
+  }, [success])
+
+  const checked = (client: ClientDataType) =>
+    dispatch(editClient({ ...client, show: !client.show }, encode(client._id)))
 
   return (
     <div className='mx-auto container p-6 lg:px-8'>
@@ -50,23 +52,23 @@ const Clients = () => {
                       <tr className='divide-x divide-[#3e3e3e]'>
                         <th
                           scope='col'
-                          className='py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-white sm:pl-0'
+                          className='py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-white min-w-[300px]'
                         >
                           Klient Ismi
                         </th>
                         <th
                           scope='col'
-                          className='px-3 py-3.5 text-left text-sm font-semibold text-white'
+                          className='px-3 py-3.5 text-left text-sm font-semibold text-white min-w-[200px]'
                         >
                           Narx
                         </th>
                         <th
                           scope='col'
-                          className='px-3 py-3.5 text-left text-sm font-semibold text-white'
+                          className='px-3 py-3.5 text-left text-sm font-semibold text-white  min-w-[150px]'
                         >
                           Status
                         </th>
-                        <th scope='col' className='relative py-3.5 pl-3 pr-4 sm:pr-0 w-28'>
+                        <th scope='col' className='relative py-3.5 pl-3 pr-4 sm:pr-0 min-w-[112px]'>
                           <span className='sr-only'>Edit</span>
                         </th>
                       </tr>
@@ -74,17 +76,17 @@ const Clients = () => {
                     <tbody className='divide-y divide-gray-800'>
                       {clients?.map(client => (
                         <tr key={client._id} className='divide-x divide-[#3e3e3e]'>
-                          <td className='whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-white sm:pl-0'>
+                          <td className='whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-white min-w-[300px]'>
                             {client.name}
                           </td>
-                          <td className='whitespace-nowrap px-3 py-4 text-sm text-gray-300'>
-                            {Number(client.price).toLocaleString().replaceAll(',', ' ')} so'm
+                          <td className='whitespace-nowrap px-3 py-4 text-sm text-gray-300 min-w-[200px]'>
+                            {getSum(client.price)}
                           </td>
-                          <td className='whitespace-nowrap px-3 py-4 text-sm text-gray-300'>
+                          <td className='whitespace-nowrap px-3 py-4 text-sm text-gray-300  min-w-[150px]'>
                             {client.show}
                             <Switch
                               checked={client.show}
-                              // onChange={setEnabled}
+                              onChange={() => checked(client)}
                               className={classNames(
                                 client.show ? 'bg-indigo-600' : 'bg-gray-200',
                                 'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2'
@@ -100,7 +102,7 @@ const Clients = () => {
                               />
                             </Switch>
                           </td>
-                          <td className='relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0'>
+                          <td className='relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0 min-w-[112px]'>
                             <div className='flex gap-4 mr-3'>
                               <Link
                                 href={`/client/${encode(client._id)}`}
