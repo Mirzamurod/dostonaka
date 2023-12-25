@@ -10,6 +10,7 @@ export interface IOrderStore {
   isLoading: boolean
   order: OrderDataType | null
   orders: TOrder[] | null
+  years: { orders: TYearOrder[]; results: TResult[] } | null
   success: boolean
   isError: boolean
   err_msg: null | { msg: string; param: string }[]
@@ -38,10 +39,25 @@ export type TOrder = {
   _id: string
 }
 
+export type TYearOrder = {
+  createdAt: string
+  name: string
+  price: string
+  total_price: number
+  total_count: number
+  show: boolean
+  orders: TResult[]
+  order?: TViewOrderData
+  updatedAt: string
+  _id: string
+}
+
 export type TOrderParams = {
   startDate?: Date | number | string
   endDate?: Date
-  dates: number
+  dates?: number
+  month?: string
+  year?: string
 }
 
 export type TViewOrderData = {
@@ -56,3 +72,5 @@ export type TViewOrderData = {
   name?: string
   _id: string
 }
+
+export type TResult = { month: string; total_price: number; total_count: number }

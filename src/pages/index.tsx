@@ -11,6 +11,7 @@ import { TOrder, TViewOrderData } from '@/types/order'
 import ViewModal from '@/components/ViewModal'
 import { getSum } from '@/components/funcs'
 import PopConfirm from '@/components/PopConfirm'
+import { toast } from 'react-toastify'
 
 export default function Home() {
   const dispatch = useDispatch()
@@ -94,6 +95,11 @@ export default function Home() {
         Number(new Date() - new Date().setDate(new Date().getDate() - 14)) / 1000 / 60 / 60 / 24 + 4
       )
     )
+  }
+
+  function copyText(entryText: any) {
+    navigator.clipboard.writeText(entryText)
+    toast.success("Ko'piya qilindi.")
   }
 
   useEffect(() => {
@@ -195,12 +201,12 @@ export default function Home() {
                                 className='px-3 py-3.5 text-left text-sm text-gray-300'
                               >
                                 {Object.keys(
-                                  order.orders.find(item => item.date === addDay(index)) || {}
+                                  order?.orders?.find(item => item.date === addDay(index)) || {}
                                 ).length ? (
                                   <div
                                     onClick={() => {
                                       view({
-                                        ...order.orders.find(item => item.date === addDay(index)),
+                                        ...order?.orders?.find(item => item.date === addDay(index)),
                                         name: order.name,
                                       })
                                       setData({
@@ -211,7 +217,7 @@ export default function Home() {
                                         ),
                                       })
                                       setId(
-                                        order.orders.find(item => item.date === addDay(index))
+                                        order?.orders?.find(item => item.date === addDay(index))
                                           ?._id as string
                                       )
                                     }}
@@ -219,21 +225,21 @@ export default function Home() {
                                     <p>
                                       Soni:{' '}
                                       {
-                                        order.orders.find(item => item.date === addDay(index))
+                                        order?.orders?.find(item => item.date === addDay(index))
                                           ?.count
                                       }
                                     </p>
                                     <p>
                                       1tasi narxi:{' '}
                                       {getSum(
-                                        order.orders.find(item => item.date === addDay(index))
+                                        order?.orders?.find(item => item.date === addDay(index))
                                           ?.price as string
                                       )}
                                     </p>
                                     <p>
                                       Narxi:{' '}
                                       {getSum(
-                                        order.orders.find(item => item.date === addDay(index))
+                                        order?.orders?.find(item => item.date === addDay(index))
                                           ?.item_price as number
                                       )}
                                     </p>
@@ -246,8 +252,20 @@ export default function Home() {
                               </td>
                             ))}
                             <td className='whitespace-nowrap px-3 py-3.5 pr-3 text-sm text-gray-300'>
-                              <p>Umuniy soni: {order.total_count}</p>
-                              <p>Umumiy narxi: {getSum(order.total_price)}</p>
+                              <div
+                                className='cursor-pointer'
+                                onClick={() =>
+                                  copyText(
+                                    `Ism: ${order.name},
+Soni: ${order.total_count} ta,
+Narxi: ${getSum(order.total_price)},
+`
+                                  )
+                                }
+                              >
+                                <p>Umuniy soni: {order.total_count}</p>
+                                <p>Umumiy narxi: {getSum(order.total_price)}</p>
+                              </div>
                             </td>
                           </tr>
                         ))}

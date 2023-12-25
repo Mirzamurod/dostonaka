@@ -18,7 +18,7 @@ export default async function handler(req, res) {
 
   if (!user) res.status(400).json({ success: false, message: 'User not found !!!' })
   else {
-    const { id, startDate, endDate, dates } = req.query
+    const { id, startDate, month, year, dates } = req.query
 
     const addDay = num => dayjs(startDate).add(num, 'day').format('DD.MM.YYYY')
     let datesArr = []
@@ -28,6 +28,48 @@ export default async function handler(req, res) {
 
       if (client) res.status(200).json(client)
       else res.status(400).json({ message: 'Klient topilmadi', success: false })
+    } else if (year) {
+      const months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
+      let orders
+      let results = []
+      orders = await Client.find({ user: user._id, show: true })
+
+      for (const client of orders) {
+        client._doc.orders = []
+        client._doc.total_price = 0
+        client._doc.total_count = 0
+
+        // maping months
+        for (const [index, item] of months.entries()) {
+          results[index] = {
+            month: `${item}.${year}`,
+            total_price: results[index]?.total_price || 0,
+            total_count: results[index]?.total_count || 0,
+          }
+          await Order.find({
+            user: user._id,
+            client: client._id,
+            date: { $regex: `${item}.${year}`, $options: 'i' },
+          }).then(response => {
+            client._doc.orders.push({ month: `${item}.${year}`, total_price: 0, total_count: 0 })
+            for (const item_res of response) {
+              client._doc.orders[index].total_price += Number(item_res?.item_price)
+              client._doc.orders[index].total_count += Number(item_res?.count)
+            }
+          })
+
+          results[index].total_count += client._doc.orders[index].total_count
+          results[index].total_price += client._doc.orders[index].total_price
+        }
+
+        // maping orders
+        for (const order of client._doc.orders) {
+          client._doc.total_count += order.total_count
+          client._doc.total_price += order.total_price
+        }
+      }
+
+      res.status(200).json({ orders, results })
     } else {
       let orders
 
@@ -49,6 +91,7 @@ export default async function handler(req, res) {
           }
         })
       }
+
       res.status(200).json(orders)
     }
   }

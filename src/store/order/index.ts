@@ -6,6 +6,7 @@ const initialState: IOrderStore = {
   isLoading: false,
   order: null,
   orders: null,
+  years: null,
   success: false,
   isError: false,
   err_msg: null,
@@ -25,6 +26,14 @@ const order = createSlice({
     onSuccessGetOrders: (state, { payload }) => {
       state.isLoading = false
       state.orders = payload
+      state.order = null
+      state.success = false
+    },
+
+    // getOrders
+    onSuccessGetYearOrders: (state, { payload }) => {
+      state.isLoading = false
+      state.years = payload
       state.order = null
       state.success = false
     },
@@ -60,6 +69,16 @@ export const getOrders = (params?: TOrderParams) =>
     params,
     onStart: order.actions.onStart.type,
     onSuccess: order.actions.onSuccessGetOrders.type,
+    onFail: order.actions.onFail.type,
+  })
+
+export const getYearOrders = (params: { year: string }) =>
+  project({
+    url: orders,
+    method: 'get',
+    params,
+    onStart: order.actions.onStart.type,
+    onSuccess: order.actions.onSuccessGetYearOrders.type,
     onFail: order.actions.onFail.type,
   })
 
