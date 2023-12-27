@@ -9,7 +9,7 @@ export type OrderDataType = {
 export interface IOrderStore {
   isLoading: boolean
   order: OrderDataType | null
-  orders: TOrder[] | null
+  orders: { orders: TOrder[]; results: TResult[] } | null
   years: { orders: TYearOrder[]; results: TResult[] } | null
   success: boolean
   isError: boolean
@@ -55,9 +55,10 @@ export type TYearOrder = {
 export type TOrderParams = {
   startDate?: Date | number | string
   endDate?: Date
-  dates?: number
+  dates?: number | Date
   month?: string
   year?: string
+  select?: string
 }
 
 export type TViewOrderData = {

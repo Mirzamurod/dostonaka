@@ -20,10 +20,14 @@ export default function Home() {
   const [openPop, setOpenPop] = useState(false)
   const [edit, setEdit] = useState(false)
   const [id, setId] = useState<string>('')
+  const [select, setSelect] = useState<'day' | 'month'>('month')
   const [data, setData] = useState<(TOrder & { date: string }) | null>(null)
   const [dataView, setDataView] = useState<TViewOrderData | null>(null)
-  const [startDate, setStartDate] = useState(new Date().setDate(new Date().getDate() - 14))
+  const [startDate, setStartDate] = useState<string | Date | number>(
+    new Date().setDate(new Date().getDate() - 7)
+  )
   const [endDate, setEndDate] = useState(new Date())
+  const [month, setMonth] = useState(new Date())
   const [total, setTotal] = useState<{ total_price: number; total_count: number } | null>()
   const [dates, setDates] = useState<any>(
     // @ts-ignore
@@ -34,32 +38,63 @@ export default function Home() {
 
   const addDay = (num: number) => dayjs(startDate).add(num, 'day').format('DD.MM.YYYY')
 
-  const onChange = (dates: any) => {
+  const onChangeDay = (dates: any) => {
     const [start, end] = dates
     setStartDate(start)
     setEndDate(end)
     if (start && end) setDates(Math.floor(Number(end - start) / 1000 / 60 / 60 / 24 + 1))
   }
 
+  const onChangeMonth = (date: any) => {
+    setMonth(date)
+    const day = `${dayjs(date).format('MM')}.01.${dayjs(date).format('YYYY')}`
+    let nextMonth = dayjs(
+      `${dayjs(date).add(1, 'month').format('MM')}.01.${dayjs(date).format('YYYY')}`
+    )
+      .add(-1, 'day')
+      .format('DD.MM.YYYY')
+    setStartDate(day)
+    setDates(Number(nextMonth.split('.')[0]))
+  }
+
   const search = () => {
-    if (!endDate) {
-      // @ts-ignore
-      setDates(Math.floor(Number(new Date() - startDate) / 1000 / 60 / 60 / 24 + 4))
-      setEndDate(new Date())
+    if (select === 'day') {
+      if (!endDate) {
+        // @ts-ignore
+        setDates(Math.floor(Number(new Date() - startDate) / 1000 / 60 / 60 / 24 + 4))
+        setEndDate(new Date())
+        dispatch(
+          getOrders({
+            startDate: dayjs(startDate).format('MM.DD.YYYY'),
+            endDate: new Date(),
+            dates: Math.floor(
+              // @ts-ignore
+              Number(new Date() - startDate) / 1000 / 60 / 60 / 24 + 4
+            ),
+            select,
+          })
+        )
+      } else {
+        // @ts-ignore
+        setDates(Math.floor(Number(endDate - startDate) / 1000 / 60 / 60 / 24 + 1))
+        dispatch(
+          getOrders({
+            startDate: dayjs(startDate).format('MM.DD.YYYY'),
+            endDate,
+            dates,
+            select,
+          })
+        )
+      }
+    } else {
       dispatch(
         getOrders({
           startDate: dayjs(startDate).format('MM.DD.YYYY'),
-          endDate: new Date(),
-          dates: Math.floor(
-            // @ts-ignore
-            Number(new Date() - startDate) / 1000 / 60 / 60 / 24 + 4
-          ),
+          endDate,
+          dates,
+          select,
         })
       )
-    } else {
-      // @ts-ignore
-      setDates(Math.floor(Number(endDate - startDate) / 1000 / 60 / 60 / 24 + 1))
-      dispatch(getOrders({ startDate: dayjs(startDate).format('MM.DD.YYYY'), endDate, dates }))
     }
   }
 
@@ -75,26 +110,54 @@ export default function Home() {
   }
 
   const reset = () => {
-    setStartDate(new Date().setDate(new Date().getDate() - 14))
-    setEndDate(new Date())
-    dispatch(
-      getOrders({
-        startDate: dayjs(new Date().setDate(new Date().getDate() - 14)).format('MM.DD.YYYY'),
-        endDate: new Date(),
-        dates: Math.floor(
-          // @ts-ignore
-          Number(new Date() - new Date().setDate(new Date().getDate() - 14)) / 1000 / 60 / 60 / 24 +
-            4
-        ),
-      })
-    )
-
-    setDates(
-      Math.floor(
-        // @ts-ignore
-        Number(new Date() - new Date().setDate(new Date().getDate() - 14)) / 1000 / 60 / 60 / 24 + 4
+    if (select === 'day') {
+      setStartDate(new Date().setDate(new Date().getDate() - 7))
+      setEndDate(new Date())
+      dispatch(
+        getOrders({
+          startDate: dayjs(new Date().setDate(new Date().getDate() - 7)).format('MM.DD.YYYY'),
+          endDate: new Date(),
+          dates: Math.floor(
+            // @ts-ignore
+            Number(new Date() - new Date().setDate(new Date().getDate() - 7)) /
+              1000 /
+              60 /
+              60 /
+              24 +
+              4
+          ),
+          select,
+        })
       )
-    )
+
+      setDates(
+        Math.floor(
+          // @ts-ignore
+          Number(new Date() - new Date().setDate(new Date().getDate() - 7)) / 1000 / 60 / 60 / 24 +
+            4
+        )
+      )
+    } else {
+      setMonth(new Date())
+      const day = `${dayjs(new Date()).format('MM')}.01.${dayjs(new Date()).format('YYYY')}`
+      let nextMonth = dayjs(
+        `${dayjs(new Date()).add(1, 'month').format('MM')}.01.${dayjs(new Date()).format('YYYY')}`
+      )
+        .add(-1, 'day')
+        .format('DD.MM.YYYY')
+
+      setStartDate(day)
+      setDates(Number(nextMonth.split('.')[0]))
+
+      dispatch(
+        getOrders({
+          startDate: dayjs(day).format('MM.DD.YYYY'),
+          endDate,
+          dates,
+          select,
+        })
+      )
+    }
   }
 
   function copyText(entryText: any) {
@@ -103,12 +166,68 @@ export default function Home() {
   }
 
   useEffect(() => {
-    dispatch(getOrders({ startDate: dayjs(startDate).format('MM.DD.YYYY'), endDate, dates }))
+    if (select === 'month') {
+      const day = `${dayjs(month).format('MM')}.01.${dayjs(month).format('YYYY')}`
+      let nextMonth = dayjs(
+        `${dayjs(month).add(1, 'month').format('MM')}.01.${dayjs(month).format('YYYY')}`
+      )
+        .add(-1, 'day')
+        .format('DD.MM.YYYY')
+
+      setStartDate(day)
+      setDates(Number(nextMonth.split('.')[0]))
+    }
+  }, [month, select])
+
+  useEffect(() => {
+    if (select === 'day') {
+      setStartDate(new Date().setDate(new Date().getDate() - 7))
+      setEndDate(new Date())
+
+      setDates(
+        Math.floor(
+          // @ts-ignore
+          Number(new Date() - new Date().setDate(new Date().getDate() - 7)) / 1000 / 60 / 60 / 24 +
+            4
+        )
+      )
+    } else {
+      setMonth(new Date())
+      const day = `${dayjs(new Date()).format('MM')}.01.${dayjs(new Date()).format('YYYY')}`
+      let nextMonth = dayjs(
+        `${dayjs(new Date()).add(1, 'month').format('MM')}.01.${dayjs(new Date()).format('YYYY')}`
+      )
+        .add(-1, 'day')
+        .format('DD.MM.YYYY')
+
+      setStartDate(day)
+      setDates(Number(nextMonth.split('.')[0]))
+    }
+  }, [select])
+
+  console.log(startDate)
+
+  useEffect(() => {
+    dispatch(
+      getOrders({
+        startDate: `${dayjs(new Date()).format('MM')}.01.${dayjs(new Date()).format('YYYY')}`,
+        endDate,
+        dates,
+        select,
+      })
+    )
   }, [])
 
   useEffect(() => {
     if (success) {
-      dispatch(getOrders({ startDate: dayjs(startDate).format('MM.DD.YYYY'), endDate, dates }))
+      dispatch(
+        getOrders({
+          startDate: dayjs(startDate).format('MM.DD.YYYY'),
+          endDate,
+          dates,
+          select,
+        })
+      )
       setOpen(false)
     }
   }, [success])
@@ -117,13 +236,14 @@ export default function Home() {
     let total_price = 0
     let total_count = 0
     if (orders) {
-      orders.forEach(order => {
+      orders.orders.forEach(order => {
         total_count += Number(order.total_count)
         total_price += Number(order.total_price)
       })
     }
     setTotal({ total_count, total_price })
   }, [orders])
+  console.log('dates', dates - 1)
 
   return (
     <Fragment>
@@ -133,17 +253,39 @@ export default function Home() {
             <div className='-mx-4 -my-2 sm:-mx-6 lg:-mx-8'>
               <div className='inline-block w-full py-2 align-middle sm:px-6 lg:px-8'>
                 <div className='flex justify-end items-center text-black mb-5 sm:flex-row flex-col'>
-                  {/* @ts-ignore */}
-                  <DatePicker
-                    dateFormat='dd/MM/yyyy'
-                    selected={startDate}
-                    onChange={onChange}
-                    startDate={startDate}
-                    endDate={endDate}
-                    selectsRange
-                    placeholderText='Click to select a date'
-                    className='indent-1 text-sm rounded block w-full p-[7px] border bg-white/5 border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-white'
-                  />
+                  <div className='sm:mt-0 mt-3 sm:mr-5'>
+                    <select
+                      id='location'
+                      name='location'
+                      className='block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6'
+                      value={select}
+                      onChange={e => setSelect(e.target.value as typeof select)}
+                    >
+                      <option value='month'>Oy</option>
+                      <option value='day'>Kun</option>
+                    </select>
+                  </div>
+                  {select === 'day' ? (
+                    // @ts-ignore
+                    <DatePicker
+                      dateFormat='dd/MM/yyyy'
+                      selected={new Date(startDate)}
+                      onChange={onChangeDay}
+                      startDate={new Date(startDate)}
+                      endDate={endDate}
+                      selectsRange
+                      className='indent-1 text-sm rounded block w-full p-[7px] border bg-white/5 border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-white'
+                    />
+                  ) : (
+                    <DatePicker
+                      selected={month}
+                      onChange={onChangeMonth}
+                      showMonthYearPicker
+                      dateFormat='MM/yyyy'
+                      placeholderText='Click to select a month'
+                      className='indent-1 text-sm rounded block w-full p-[7px] border bg-white/5 border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-white'
+                    />
+                  )}
                   <Button
                     onClick={search}
                     className='w-full sm:w-auto sm:mt-0 mt-3 sm:ml-5 rounded'
@@ -160,7 +302,7 @@ export default function Home() {
                 </div>
                 {isLoading ? (
                   'Loading...'
-                ) : !isLoading && orders?.length ? (
+                ) : !isLoading && orders?.orders?.length ? (
                   <div className='block w-full overflow-x-auto'>
                     <table className='divide-y divide-gray-700 text-white w-full min-w-full'>
                       <thead>
@@ -189,7 +331,7 @@ export default function Home() {
                         </tr>
                       </thead>
                       <tbody className='divide-y divide-gray-800'>
-                        {orders?.map(order => (
+                        {orders.orders?.map(order => (
                           <tr key={order._id} className='divide-x divide-[#3e3e3e]'>
                             <td className='whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium'>
                               {order.name}
@@ -259,6 +401,8 @@ export default function Home() {
                                     `Ism: ${order.name},
 Soni: ${order.total_count} ta,
 Narxi: ${getSum(order.total_price)},
+Boshlanish sanasi: ${dayjs(startDate).format('DD.MM.YYYY')},
+Tugash sanasi: ${addDay(Number(dates) - 1)}
 `
                                   )
                                 }
