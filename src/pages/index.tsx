@@ -20,7 +20,7 @@ export default function Home() {
   const [openPop, setOpenPop] = useState(false)
   const [edit, setEdit] = useState(false)
   const [id, setId] = useState<string>('')
-  const [select, setSelect] = useState<'day' | 'month'>('month')
+  const [select, setSelect] = useState<'day' | 'month'>('day')
   const [data, setData] = useState<(TOrder & { date: string }) | null>(null)
   const [dataView, setDataView] = useState<TViewOrderData | null>(null)
   const [startDate, setStartDate] = useState<string | Date | number>(
@@ -205,8 +205,6 @@ export default function Home() {
     }
   }, [select])
 
-  console.log(startDate)
-
   useEffect(() => {
     dispatch(
       getOrders({
@@ -243,7 +241,8 @@ export default function Home() {
     }
     setTotal({ total_count, total_price })
   }, [orders])
-  console.log('dates', dates - 1)
+
+  console.log(dates)
 
   return (
     <Fragment>
@@ -257,7 +256,7 @@ export default function Home() {
                     <select
                       id='location'
                       name='location'
-                      className='block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6'
+                      className='block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6 sm:mb-0 mb-3'
                       value={select}
                       onChange={e => setSelect(e.target.value as typeof select)}
                     >
@@ -414,6 +413,31 @@ Tugash sanasi: ${addDay(Number(dates) - 1)}
                           </tr>
                         ))}
                         <tr className='divide-x divide-[#3e3e3e]'>
+                          <td className='whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium' />
+                          {[...new Array(dates)].map((_, index) => (
+                            <td scope='col' className='px-3 py-3.5 text-left text-sm text-gray-300'>
+                              <p>
+                                Umumiy soni:{' '}
+                                {orders.results.find(result => result.date === addDay(index))
+                                  ?.total_count ?? 0}
+                              </p>
+                              <p>
+                                Umumiy soni:{' '}
+                                {getSum(
+                                  (orders.results.find(result => result.date === addDay(index))
+                                    ?.total_price as number) ?? 0
+                                )}
+                              </p>
+                              {/* <p>Umumiy soni: {result.total_count}</p> */}
+                              {/* <p>Umumiy narxi: {getSum(result.total_price)}</p> */}
+                            </td>
+                          ))}
+                          <td className='whitespace-nowrap px-3 py-3.5 pr-3 text-sm font-semibold text-gray-300'>
+                            <p>Umuniy soni: {total?.total_count}</p>
+                            <p>Umumiy narxi: {getSum(total?.total_price as number)}</p>
+                          </td>
+                        </tr>
+                        {/* <tr className='divide-x divide-[#3e3e3e]'>
                           <td
                             className='whitespace-nowrap px-3 py-3.5 pr-3 text-sm text-gray-300'
                             colSpan={dates + 1}
@@ -422,7 +446,7 @@ Tugash sanasi: ${addDay(Number(dates) - 1)}
                             <p>Umuniy soni: {total?.total_count}</p>
                             <p>Umumiy narxi: {getSum(total?.total_price as number)}</p>
                           </td>
-                        </tr>
+                        </tr> */}
                       </tbody>
                     </table>
                   </div>

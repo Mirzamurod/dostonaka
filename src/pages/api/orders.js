@@ -85,16 +85,28 @@ export default async function handler(req, res) {
         client._doc.total_price = 0
         client._doc.total_count = 0
         await Order.find({ user: user._id, client: client._id, date: datesArr }).then(response => {
-          console.log(response)
           client._doc.orders = response
+
           for (const item of response) {
             client._doc.total_price += Number(item.item_price)
             client._doc.total_count += Number(item.count)
+
+            if (results.some(result => result.date === item.date)) {
+              results.find(result => result.date === item.date).total_count += Number(item.count)
+              results.find(result => result.date === item.date).total_price += Number(
+                item.item_price
+              )
+            } else
+              results.push({
+                date: item.date,
+                total_count: Number(item.count),
+                total_price: Number(item.item_price),
+              })
           }
         })
       }
 
-      res.status(200).json({ orders })
+      res.status(200).json({ orders, results })
     }
   }
 }
