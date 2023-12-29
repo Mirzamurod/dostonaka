@@ -24,7 +24,9 @@ export default function Home() {
   const [data, setData] = useState<(TOrder & { date: string }) | null>(null)
   const [dataView, setDataView] = useState<TViewOrderData | null>(null)
   const [startDate, setStartDate] = useState<string | Date | number>(
-    new Date().setDate(new Date().getDate() - 7)
+    select === 'day'
+      ? new Date().setDate(new Date().getDate() - 7)
+      : new Date(`${dayjs(new Date()).format('MM')}.01.${dayjs(new Date()).format('YYYY')}`)
   )
   const [endDate, setEndDate] = useState(new Date())
   const [month, setMonth] = useState(new Date())
@@ -52,9 +54,10 @@ export default function Home() {
       `${dayjs(date).add(1, 'month').format('MM')}.01.${dayjs(date).format('YYYY')}`
     )
       .add(-1, 'day')
-      .format('DD.MM.YYYY')
+      .format('DD')
+
     setStartDate(day)
-    setDates(Number(nextMonth.split('.')[0]))
+    setDates(Number(nextMonth))
   }
 
   const search = () => {
@@ -144,10 +147,10 @@ export default function Home() {
         `${dayjs(new Date()).add(1, 'month').format('MM')}.01.${dayjs(new Date()).format('YYYY')}`
       )
         .add(-1, 'day')
-        .format('DD.MM.YYYY')
+        .format('DD')
 
       setStartDate(day)
-      setDates(Number(nextMonth.split('.')[0]))
+      setDates(Number(nextMonth))
 
       dispatch(
         getOrders({
@@ -172,10 +175,10 @@ export default function Home() {
         `${dayjs(month).add(1, 'month').format('MM')}.01.${dayjs(month).format('YYYY')}`
       )
         .add(-1, 'day')
-        .format('DD.MM.YYYY')
+        .format('DD')
 
       setStartDate(day)
-      setDates(Number(nextMonth.split('.')[0]))
+      setDates(Number(nextMonth))
     }
   }, [month, select])
 
@@ -198,10 +201,10 @@ export default function Home() {
         `${dayjs(new Date()).add(1, 'month').format('MM')}.01.${dayjs(new Date()).format('YYYY')}`
       )
         .add(-1, 'day')
-        .format('DD.MM.YYYY')
+        .format('DD')
 
       setStartDate(day)
-      setDates(Number(nextMonth.split('.')[0]))
+      setDates(Number(nextMonth))
     }
   }, [select])
 
