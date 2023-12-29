@@ -129,6 +129,7 @@ const Reports = () => {
                                   `Ism: ${order.name},
 Soni: ${order.total_count} ta,
 Narxi: ${getSum(order.total_price)},
+Yil: ${dayjs(year).format('YYYY')}
 `
                                 )
                               }

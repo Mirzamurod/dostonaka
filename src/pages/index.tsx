@@ -20,7 +20,7 @@ export default function Home() {
   const [openPop, setOpenPop] = useState(false)
   const [edit, setEdit] = useState(false)
   const [id, setId] = useState<string>('')
-  const [select, setSelect] = useState<'day' | 'month'>('day')
+  const [select, setSelect] = useState<'day' | 'month'>('month')
   const [data, setData] = useState<(TOrder & { date: string }) | null>(null)
   const [dataView, setDataView] = useState<TViewOrderData | null>(null)
   const [startDate, setStartDate] = useState<string | Date | number>(
@@ -208,7 +208,7 @@ export default function Home() {
   useEffect(() => {
     dispatch(
       getOrders({
-        startDate: `${dayjs(new Date()).format('MM')}.01.${dayjs(new Date()).format('YYYY')}`,
+        startDate: dayjs(startDate).format('MM.DD.YYYY'),
         endDate,
         dates,
         select,
@@ -241,8 +241,6 @@ export default function Home() {
     }
     setTotal({ total_count, total_price })
   }, [orders])
-
-  console.log(dates)
 
   return (
     <Fragment>
@@ -422,7 +420,7 @@ Tugash sanasi: ${addDay(Number(dates) - 1)}
                                   ?.total_count ?? 0}
                               </p>
                               <p>
-                                Umumiy soni:{' '}
+                                Umumiy narxi:{' '}
                                 {getSum(
                                   (orders.results.find(result => result.date === addDay(index))
                                     ?.total_price as number) ?? 0
