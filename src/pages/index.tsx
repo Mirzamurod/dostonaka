@@ -12,6 +12,7 @@ import ViewModal from '@/components/ViewModal'
 import { getSum } from '@/components/funcs'
 import PopConfirm from '@/components/PopConfirm'
 import { toast } from 'react-toastify'
+import { add, format, getDaysInMonth, startOfMonth } from 'date-fns'
 
 export default function Home() {
   const dispatch = useDispatch()
@@ -26,19 +27,36 @@ export default function Home() {
   const [startDate, setStartDate] = useState<string | Date | number>(
     select === 'day'
       ? new Date().setDate(new Date().getDate() - 7)
-      : new Date(`${dayjs(new Date()).format('MM')}.01.${dayjs(new Date()).format('YYYY')}`)
+      : new Date(`${format(new Date(), 'MM')}/01/${format(new Date(), 'yyyy')}`)
+    // : new Date(`${dayjs(new Date()).format('MM')}.01.${dayjs(new Date()).format('YYYY')}`)
   )
   const [endDate, setEndDate] = useState(new Date())
   const [month, setMonth] = useState(new Date())
   const [total, setTotal] = useState<{ total_price: number; total_count: number } | null>()
   const [dates, setDates] = useState<any>(
-    // @ts-ignore
-    Math.floor(Number(endDate - startDate) / 1000 / 60 / 60 / 24 + 4)
+    select === 'day'
+      ? // @ts-ignore
+        Math.floor(Number(endDate - startDate) / 1000 / 60 / 60 / 24 + 4)
+      : format(
+          add(
+            new Date(
+              `${format(add(new Date(), { months: 1 }), 'MM')}/01/${format(new Date(), 'yyyy')}`
+            ),
+            { days: -1 }
+          ),
+          'dd'
+        )
   )
 
   const { isLoading, orders, success } = useSelector((state: RootState) => state.order)
 
-  const addDay = (num: number) => dayjs(startDate).add(num, 'day').format('DD.MM.YYYY')
+  // const addDay = (num: number) => dayjs(new Date(startDate)).add(num, 'day').format('DD.MM.YYYY')
+
+  const addDayFns = (num: number) => format(add(new Date(startDate), { days: num }), 'dd.MM.yyyy')
+
+  const formatFns = (date: Date | number | string) => format(new Date(date), 'dd/MM/yyyy')
+
+  const formatFnsM = (date: Date | number | string) => format(new Date(date), 'MM.dd.yyyy')
 
   const onChangeDay = (dates: any) => {
     const [start, end] = dates
@@ -49,15 +67,9 @@ export default function Home() {
 
   const onChangeMonth = (date: any) => {
     setMonth(date)
-    const day = `${dayjs(date).format('MM')}.01.${dayjs(date).format('YYYY')}`
-    let nextMonth = dayjs(
-      `${dayjs(date).add(1, 'month').format('MM')}.01.${dayjs(date).format('YYYY')}`
-    )
-      .add(-1, 'day')
-      .format('DD')
 
-    setStartDate(day)
-    setDates(Number(nextMonth))
+    setStartDate(startOfMonth(date))
+    setDates(getDaysInMonth(date))
   }
 
   const search = () => {
@@ -68,7 +80,7 @@ export default function Home() {
         setEndDate(new Date())
         dispatch(
           getOrders({
-            startDate: dayjs(startDate).format('MM.DD.YYYY'),
+            startDate: formatFnsM(startDate),
             endDate: new Date(),
             dates: Math.floor(
               // @ts-ignore
@@ -80,25 +92,9 @@ export default function Home() {
       } else {
         // @ts-ignore
         setDates(Math.floor(Number(endDate - startDate) / 1000 / 60 / 60 / 24 + 1))
-        dispatch(
-          getOrders({
-            startDate: dayjs(startDate).format('MM.DD.YYYY'),
-            endDate,
-            dates,
-            select,
-          })
-        )
+        dispatch(getOrders({ startDate: formatFnsM(startDate), endDate, dates, select }))
       }
-    } else {
-      dispatch(
-        getOrders({
-          startDate: dayjs(startDate).format('MM.DD.YYYY'),
-          endDate,
-          dates,
-          select,
-        })
-      )
-    }
+    } else dispatch(getOrders({ startDate: formatFnsM(startDate), endDate, dates, select }))
   }
 
   const addOrder = (data: TOrder, date: string) => {
@@ -118,7 +114,7 @@ export default function Home() {
       setEndDate(new Date())
       dispatch(
         getOrders({
-          startDate: dayjs(new Date().setDate(new Date().getDate() - 7)).format('MM.DD.YYYY'),
+          startDate: formatFnsM(new Date().setDate(new Date().getDate() - 7)),
           endDate: new Date(),
           dates: Math.floor(
             // @ts-ignore
@@ -142,21 +138,15 @@ export default function Home() {
       )
     } else {
       setMonth(new Date())
-      const day = `${dayjs(new Date()).format('MM')}.01.${dayjs(new Date()).format('YYYY')}`
-      let nextMonth = dayjs(
-        `${dayjs(new Date()).add(1, 'month').format('MM')}.01.${dayjs(new Date()).format('YYYY')}`
-      )
-        .add(-1, 'day')
-        .format('DD')
 
-      setStartDate(day)
-      setDates(Number(nextMonth))
+      setStartDate(startOfMonth(new Date()))
+      setDates(getDaysInMonth(new Date()))
 
       dispatch(
         getOrders({
-          startDate: dayjs(day).format('MM.DD.YYYY'),
+          startDate: formatFnsM(startOfMonth(new Date())),
           endDate,
-          dates,
+          dates: getDaysInMonth(new Date()),
           select,
         })
       )
@@ -168,19 +158,23 @@ export default function Home() {
     toast.success("Ko'piya qilindi.")
   }
 
-  useEffect(() => {
-    if (select === 'month') {
-      const day = `${dayjs(month).format('MM')}.01.${dayjs(month).format('YYYY')}`
-      let nextMonth = dayjs(
-        `${dayjs(month).add(1, 'month').format('MM')}.01.${dayjs(month).format('YYYY')}`
-      )
-        .add(-1, 'day')
-        .format('DD')
+  // useEffect(() => {
+  //   if (select === 'month') {
+  //     const day = `${format(new Date(), 'MM')}/01/${format(new Date(), 'yyyy')}`
+  //     let nextMonth = format(
+  //       add(
+  //         new Date(
+  //           `${format(add(new Date(), { months: 1 }), 'MM')}/01/${format(new Date(), 'yyyy')}`
+  //         ),
+  //         { days: -1 }
+  //       ),
+  //       'dd'
+  //     )
 
-      setStartDate(day)
-      setDates(Number(nextMonth))
-    }
-  }, [month, select])
+  //     setStartDate(day)
+  //     setDates(Number(nextMonth))
+  //   }
+  // }, [month, select])
 
   useEffect(() => {
     if (select === 'day') {
@@ -196,39 +190,19 @@ export default function Home() {
       )
     } else {
       setMonth(new Date())
-      const day = `${dayjs(new Date()).format('MM')}.01.${dayjs(new Date()).format('YYYY')}`
-      let nextMonth = dayjs(
-        `${dayjs(new Date()).add(1, 'month').format('MM')}.01.${dayjs(new Date()).format('YYYY')}`
-      )
-        .add(-1, 'day')
-        .format('DD')
 
-      setStartDate(day)
-      setDates(Number(nextMonth))
+      setStartDate(startOfMonth(new Date()))
+      setDates(getDaysInMonth(new Date()))
     }
   }, [select])
 
   useEffect(() => {
-    dispatch(
-      getOrders({
-        startDate: dayjs(startDate).format('MM.DD.YYYY'),
-        endDate,
-        dates,
-        select,
-      })
-    )
+    dispatch(getOrders({ startDate: formatFnsM(startDate), endDate, dates, select }))
   }, [])
 
   useEffect(() => {
     if (success) {
-      dispatch(
-        getOrders({
-          startDate: dayjs(startDate).format('MM.DD.YYYY'),
-          endDate,
-          dates,
-          select,
-        })
-      )
+      dispatch(getOrders({ startDate: formatFnsM(startDate), endDate, dates, select }))
       setOpen(false)
     }
   }, [success])
@@ -319,7 +293,7 @@ export default function Home() {
                               scope='col'
                               className='px-3 py-3.5 text-left text-sm font-semibold min-w-[220px]'
                             >
-                              {addDay(index)}
+                              {addDayFns(index)}
                             </th>
                           ))}
                           <th
@@ -343,23 +317,25 @@ export default function Home() {
                                 className='px-3 py-3.5 text-left text-sm text-gray-300'
                               >
                                 {Object.keys(
-                                  order?.orders?.find(item => item.date === addDay(index)) || {}
+                                  order?.orders?.find(item => item.date === addDayFns(index)) || {}
                                 ).length ? (
                                   <div
                                     onClick={() => {
                                       view({
-                                        ...order?.orders?.find(item => item.date === addDay(index)),
+                                        ...order?.orders?.find(
+                                          item => item.date === addDayFns(index)
+                                        ),
                                         name: order.name,
                                       })
                                       setData({
                                         ...order,
-                                        date: addDay(index),
+                                        date: addDayFns(index),
                                         order: order?.orders?.find(
-                                          item => item.date === addDay(index)
+                                          item => item.date === addDayFns(index)
                                         ),
                                       })
                                       setId(
-                                        order?.orders?.find(item => item.date === addDay(index))
+                                        order?.orders?.find(item => item.date === addDayFns(index))
                                           ?._id as string
                                       )
                                     }}
@@ -367,27 +343,27 @@ export default function Home() {
                                     <p>
                                       Soni:{' '}
                                       {
-                                        order?.orders?.find(item => item.date === addDay(index))
+                                        order?.orders?.find(item => item.date === addDayFns(index))
                                           ?.count
                                       }
                                     </p>
                                     <p>
                                       1tasi narxi:{' '}
                                       {getSum(
-                                        order?.orders?.find(item => item.date === addDay(index))
+                                        order?.orders?.find(item => item.date === addDayFns(index))
                                           ?.price as string
                                       )}
                                     </p>
                                     <p>
                                       Narxi:{' '}
                                       {getSum(
-                                        order?.orders?.find(item => item.date === addDay(index))
+                                        order?.orders?.find(item => item.date === addDayFns(index))
                                           ?.item_price as number
                                       )}
                                     </p>
                                   </div>
                                 ) : (
-                                  <Button onClick={() => addOrder(order, addDay(index))}>
+                                  <Button onClick={() => addOrder(order, addDayFns(index))}>
                                     <PlusIcon className='h-5 w-5' aria-hidden='true' />
                                   </Button>
                                 )}
@@ -401,8 +377,8 @@ export default function Home() {
                                     `Ism: ${order.name},
 Soni: ${order.total_count} ta,
 Narxi: ${getSum(order.total_price)},
-Boshlanish sanasi: ${dayjs(startDate).format('DD.MM.YYYY')},
-Tugash sanasi: ${addDay(Number(dates) - 1)}
+Boshlanish sanasi: ${formatFnsM(startDate)},
+Tugash sanasi: ${addDayFns(Number(dates) - 1)}
 `
                                   )
                                 }
@@ -419,13 +395,13 @@ Tugash sanasi: ${addDay(Number(dates) - 1)}
                             <td scope='col' className='px-3 py-3.5 text-left text-sm text-gray-300'>
                               <p>
                                 Umumiy soni:{' '}
-                                {orders.results.find(result => result.date === addDay(index))
+                                {orders.results.find(result => result.date === addDayFns(index))
                                   ?.total_count ?? 0}
                               </p>
                               <p>
                                 Umumiy narxi:{' '}
                                 {getSum(
-                                  (orders.results.find(result => result.date === addDay(index))
+                                  (orders.results.find(result => result.date === addDayFns(index))
                                     ?.total_price as number) ?? 0
                                 )}
                               </p>
