@@ -72,7 +72,7 @@ export const getOrders = (params?: TOrderParams) =>
     onFail: order.actions.onFail.type,
   })
 
-export const getYearOrders = (params: { year: string }) =>
+export const getYearOrders = (params: { year: string; search?: string }) =>
   project({
     url: orders,
     method: 'get',

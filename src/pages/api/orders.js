@@ -18,7 +18,7 @@ export default async function handler(req, res) {
 
   if (!user) res.status(400).json({ success: false, message: 'User not found !!!' })
   else {
-    const { id, startDate, year, dates } = req.query
+    const { id, startDate, year, dates, search } = req.query
 
     const addDay = num => dayjs(startDate).add(num, 'day').format('DD.MM.YYYY')
     let datesArr = []
@@ -32,7 +32,11 @@ export default async function handler(req, res) {
       const months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
       let orders
       let results = []
-      orders = await Client.find({ user: user._id, show: true })
+      orders = await Client.find({
+        user: user._id,
+        show: true,
+        name: { $regex: search ?? '', $options: 'i' },
+      })
 
       for (const client of orders) {
         client._doc.orders = []
@@ -78,7 +82,11 @@ export default async function handler(req, res) {
         datesArr.push(addDay(index))
       }
 
-      orders = await Client.find({ user: user._id, show: true })
+      orders = await Client.find({
+        user: user._id,
+        show: true,
+        name: { $regex: search ?? '', $options: 'i' },
+      })
 
       for (const client of orders) {
         client._doc.orders = []

@@ -21,6 +21,7 @@ export default function Home() {
   const [openPop, setOpenPop] = useState(false)
   const [edit, setEdit] = useState(false)
   const [id, setId] = useState<string>('')
+  const [search, setSearch] = useState<string>('')
   const [select, setSelect] = useState<'day' | 'month'>('month')
   const [data, setData] = useState<(TOrder & { date: string }) | null>(null)
   const [dataView, setDataView] = useState<TViewOrderData | null>(null)
@@ -54,8 +55,6 @@ export default function Home() {
 
   const addDayFns = (num: number) => format(add(new Date(startDate), { days: num }), 'dd.MM.yyyy')
 
-  const formatFns = (date: Date | number | string) => format(new Date(date), 'dd/MM/yyyy')
-
   const formatFnsM = (date: Date | number | string) => format(new Date(date), 'MM.dd.yyyy')
 
   const onChangeDay = (dates: any) => {
@@ -72,7 +71,7 @@ export default function Home() {
     setDates(getDaysInMonth(date))
   }
 
-  const search = () => {
+  const searchBtn = () => {
     if (select === 'day') {
       if (!endDate) {
         // @ts-ignore
@@ -81,20 +80,20 @@ export default function Home() {
         dispatch(
           getOrders({
             startDate: formatFnsM(startDate),
-            endDate: new Date(),
             dates: Math.floor(
               // @ts-ignore
               Number(new Date() - startDate) / 1000 / 60 / 60 / 24 + 4
             ),
             select,
+            search,
           })
         )
       } else {
         // @ts-ignore
         setDates(Math.floor(Number(endDate - startDate) / 1000 / 60 / 60 / 24 + 1))
-        dispatch(getOrders({ startDate: formatFnsM(startDate), endDate, dates, select }))
+        dispatch(getOrders({ startDate: formatFnsM(startDate), dates, select, search }))
       }
-    } else dispatch(getOrders({ startDate: formatFnsM(startDate), endDate, dates, select }))
+    } else dispatch(getOrders({ startDate: formatFnsM(startDate), dates, select, search }))
   }
 
   const addOrder = (data: TOrder, date: string) => {
@@ -115,7 +114,6 @@ export default function Home() {
       dispatch(
         getOrders({
           startDate: formatFnsM(new Date().setDate(new Date().getDate() - 7)),
-          endDate: new Date(),
           dates: Math.floor(
             // @ts-ignore
             Number(new Date() - new Date().setDate(new Date().getDate() - 7)) /
@@ -126,9 +124,11 @@ export default function Home() {
               4
           ),
           select,
+          search: '',
         })
       )
 
+      setSearch('')
       setDates(
         Math.floor(
           // @ts-ignore
@@ -141,13 +141,14 @@ export default function Home() {
 
       setStartDate(startOfMonth(new Date()))
       setDates(getDaysInMonth(new Date()))
+      setSearch('')
 
       dispatch(
         getOrders({
           startDate: formatFnsM(startOfMonth(new Date())),
-          endDate,
           dates: getDaysInMonth(new Date()),
           select,
+          search: '',
         })
       )
     }
@@ -197,12 +198,12 @@ export default function Home() {
   }, [select])
 
   useEffect(() => {
-    dispatch(getOrders({ startDate: formatFnsM(startDate), endDate, dates, select }))
+    dispatch(getOrders({ startDate: formatFnsM(startDate), dates, select, search }))
   }, [])
 
   useEffect(() => {
     if (success) {
-      dispatch(getOrders({ startDate: formatFnsM(startDate), endDate, dates, select }))
+      dispatch(getOrders({ startDate: formatFnsM(startDate), dates, select, search }))
       setOpen(false)
     }
   }, [success])
@@ -260,8 +261,15 @@ export default function Home() {
                       className='indent-1 text-sm rounded block w-full p-[7px] border bg-white/5 border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-white'
                     />
                   )}
+                  <input
+                    type='text'
+                    value={search}
+                    onChange={({ target }) => setSearch(target.value)}
+                    placeholder="Ism bo'yicha qidirish"
+                    className='w-full sm:w-auto sm:mt-0 mt-3 sm:ml-5 text-sm rounded block p-2 border bg-white/5 border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-white'
+                  />
                   <Button
-                    onClick={search}
+                    onClick={searchBtn}
                     className='w-full sm:w-auto sm:mt-0 mt-3 sm:ml-5 rounded'
                   >
                     Qidirish
@@ -392,7 +400,11 @@ Tugash sanasi: ${addDayFns(Number(dates) - 1)}
                         <tr className='divide-x divide-[#3e3e3e]'>
                           <td className='whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium' />
                           {[...new Array(dates)].map((_, index) => (
-                            <td scope='col' className='px-3 py-3.5 text-left text-sm text-gray-300'>
+                            <td
+                              scope='col'
+                              key={index}
+                              className='px-3 py-3.5 text-left text-sm text-gray-300'
+                            >
                               <p>
                                 Umumiy soni:{' '}
                                 {orders.results.find(result => result.date === addDayFns(index))

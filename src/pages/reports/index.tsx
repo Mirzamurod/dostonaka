@@ -6,10 +6,12 @@ import dayjs from 'dayjs'
 import { getSum } from '@/components/funcs'
 import { getYearOrders } from '@/store/order'
 import { toast } from 'react-toastify'
+import Button from '@/components/Button'
 
 const Reports = () => {
   const dispatch = useDispatch()
   const [year, setYear] = useState(new Date())
+  const [search, setSearch] = useState<string>('')
   const [total, setTotal] = useState<{ total_price: number; total_count: number } | null>()
 
   const { isLoading, years } = useSelector((state: RootState) => state.order)
@@ -32,9 +34,17 @@ const Reports = () => {
 
   const onChange = (year: Date) => setYear(year)
 
+  const searchBtn = () => dispatch(getYearOrders({ year: dayjs(year).format('YYYY'), search }))
+
+  const reset = () => {
+    dispatch(getYearOrders({ year: dayjs(new Date()).format('YYYY'), search: '' }))
+    setYear(new Date())
+    setSearch('')
+  }
+
   useEffect(() => {
-    dispatch(getYearOrders({ year: dayjs(year).format('YYYY') }))
-  }, [year])
+    dispatch(getYearOrders({ year: dayjs(year).format('YYYY'), search }))
+  }, [])
 
   useEffect(() => {
     let total_price = 0
@@ -67,10 +77,23 @@ const Reports = () => {
                   dateFormat='yyyy'
                   className='indent-1 text-sm rounded block w-full p-[7px] border bg-white/5 border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-white'
                 />
+                <input
+                  type='text'
+                  value={search}
+                  onChange={({ target }) => setSearch(target.value)}
+                  placeholder="Ism bo'yicha qidirish"
+                  className='w-full sm:w-auto sm:mt-0 mt-3 sm:ml-5 text-sm rounded block p-2 border bg-white/5 border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-white'
+                />
+                <Button
+                  onClick={searchBtn}
+                  className='w-full sm:w-auto sm:mt-0 mt-3 sm:ml-5 rounded'
+                >
+                  Qidirish
+                </Button>
                 <button
                   type='button'
                   className='inline-flex sm:ml-5 sm:mt-0 mt-3 justify-center rounded bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 w-full sm:w-auto'
-                  onClick={() => setYear(new Date())}
+                  onClick={reset}
                 >
                   Restart
                 </button>
@@ -143,7 +166,11 @@ Yil: ${dayjs(year).format('YYYY')}
                       <tr className='divide-x divide-[#3e3e3e]'>
                         <td className='whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium' />
                         {years.results.map(result => (
-                          <td scope='col' className='px-3 py-3.5 text-left text-sm text-gray-300'>
+                          <td
+                            scope='col'
+                            key={result.month}
+                            className='px-3 py-3.5 text-left text-sm text-gray-300'
+                          >
                             <p>Umumiy soni: {result.total_count}</p>
                             <p>Umumiy narxi: {getSum(result.total_price)}</p>
                           </td>

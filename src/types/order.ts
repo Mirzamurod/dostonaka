@@ -59,6 +59,7 @@ export type TOrderParams = {
   month?: string
   year?: string
   select?: string
+  search?: string
 }
 
 export type TViewOrderData = {
