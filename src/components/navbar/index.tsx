@@ -16,7 +16,7 @@ const navigation = [
   { name: 'Home', href: '/' },
   { name: 'Yillik', href: '/reports' },
   { name: 'Klientlar', href: '/clients' },
-  { name: 'Settings', href: '/' },
+  { name: 'Settings', href: '/settings' },
 ]
 
 const Dropdown = ({ children }: { children: ReactNode }) => {

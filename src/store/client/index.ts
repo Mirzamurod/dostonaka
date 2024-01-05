@@ -6,6 +6,7 @@ const initialState: IClientStore = {
   isLoading: false,
   client: null,
   clients: null,
+  count: 1,
   success: false,
   isError: false,
   err_msg: null,
@@ -25,6 +26,7 @@ const login = createSlice({
     onSuccessGetClients: (state, { payload }) => {
       state.isLoading = false
       state.clients = payload.data
+      state.count = payload.pageLists
       state.client = null
       state.success = false
     },
@@ -53,10 +55,11 @@ const login = createSlice({
   },
 })
 
-export const getClients = () =>
+export const getClients = (params?: { search?: string; page?: number }) =>
   project({
     url: clients,
     method: 'get',
+    params,
     onStart: login.actions.onStart.type,
     onSuccess: login.actions.onSuccessGetClients.type,
     onFail: login.actions.onFail.type,

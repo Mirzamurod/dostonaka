@@ -11,6 +11,7 @@ export interface IOrderStore {
   order: OrderDataType | null
   orders: { orders: TOrder[]; results: TResultDay[] } | null
   years: { orders: TYearOrder[]; results: TResultMonth[] } | null
+  count: number
   success: boolean
   isError: boolean
   err_msg: null | { msg: string; param: string }[]
@@ -60,6 +61,7 @@ export type TOrderParams = {
   year?: string
   select?: string
   search?: string
+  page?: number
 }
 
 export type TViewOrderData = {

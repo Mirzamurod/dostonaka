@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react'
+import Button from '@/components/Button'
 import { getSum } from '@/components/funcs'
 import { RootState } from '@/store'
 import { editClient, getClients } from '@/store/client'
@@ -5,7 +7,6 @@ import { ClientDataType } from '@/types/client'
 import { Switch } from '@headlessui/react'
 import { encode } from 'js-base64'
 import Link from 'next/link'
-import { useEffect } from 'react'
 import ReactPaginate from 'react-paginate'
 import { useDispatch, useSelector } from 'react-redux'
 
@@ -15,16 +16,34 @@ function classNames(...classes: any) {
 
 const Clients = () => {
   const dispatch = useDispatch()
+  const [search, setSearch] = useState<string>('')
+  const [page, setPage] = useState<number>(0)
 
-  const { isLoading, clients, success } = useSelector((state: RootState) => state.client)
+  const { isLoading, clients, success, count } = useSelector((state: RootState) => state.client)
 
   useEffect(() => {
-    dispatch(getClients())
+    dispatch(getClients({ page }))
   }, [])
 
   useEffect(() => {
-    if (success) dispatch(getClients())
+    if (success) dispatch(getClients({ page }))
   }, [success])
+
+  const searchBtn = () => {
+    dispatch(getClients({ search, page: 0 }))
+    setPage(0)
+  }
+
+  const changePage = ({ selected }: { selected: number }) => {
+    setPage(selected)
+    dispatch(getClients({ page: selected }))
+  }
+
+  const reset = () => {
+    dispatch(getClients({ search: '', page: 0 }))
+    setSearch('')
+    setPage(0)
+  }
 
   const checked = (client: ClientDataType) =>
     dispatch(editClient({ ...client, show: !client.show }, encode(client._id)))
@@ -32,12 +51,29 @@ const Clients = () => {
   return (
     <div className='mx-auto container p-6 lg:px-8'>
       <div className='pb-10'>
-        <div className='flex justify-end'>
+        <div className='flex justify-end sm:flex-row flex-col'>
+          <input
+            type='text'
+            value={search}
+            onChange={({ target }) => setSearch(target.value)}
+            placeholder="Ism bo'yicha qidirish"
+            className='w-full sm:w-auto sm:mt-0 mt-3 sm:ml-5 text-sm rounded block p-2 border bg-white/5 border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-white'
+          />
+          <Button onClick={searchBtn} className='w-full sm:w-auto sm:mt-0 mt-3 sm:ml-5 rounded'>
+            Qidirish
+          </Button>
+          <button
+            type='button'
+            className='inline-flex sm:ml-5 sm:mt-0 mt-3 justify-center rounded bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 w-full sm:w-auto'
+            onClick={reset}
+          >
+            Restart
+          </button>
           <Link
             href='/client/add'
-            className='block rounded-md bg-indigo-500 px-3 py-2 text-center text-sm font-semibold text-white hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500'
+            className='sm:w-auto sm:mt-0 mt-3 sm:ml-5 block rounded-md bg-indigo-500 px-3 py-2 text-center text-sm font-semibold text-white hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500'
           >
-            Add user
+            Klient qo'shish
           </Link>
         </div>
         {isLoading ? (
@@ -74,7 +110,7 @@ const Clients = () => {
                       </tr>
                     </thead>
                     <tbody className='divide-y divide-gray-800'>
-                      {clients?.map(client => (
+                      {clients?.map((client, index) => (
                         <tr key={client._id} className='divide-x divide-[#3e3e3e]'>
                           <td className='whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-white min-w-[300px]'>
                             {client.name}
@@ -117,28 +153,30 @@ const Clients = () => {
                     </tbody>
                   </table>
                 </div>
-                <div id='react-paginate' className='w-full text-end mt-5'>
-                  <ReactPaginate
-                    breakLabel='...'
-                    nextLabel='>'
-                    // onPageChange={handlePageClick}
-                    pageRangeDisplayed={5}
-                    pageCount={5}
-                    previousLabel='<'
-                    renderOnZeroPageCount={null}
-                    breakClassName='page-item'
-                    breakLinkClassName='page-link'
-                    containerClassName='pagination'
-                    pageClassName='page-item'
-                    pageLinkClassName='page-link'
-                    previousClassName='page-item'
-                    previousLinkClassName='page-link'
-                    nextClassName='page-item'
-                    nextLinkClassName='page-link'
-                    activeClassName='active'
-                  />
-                </div>
               </div>
+            </div>
+            <div id='react-paginate' className='w-full text-end mt-5'>
+              <ReactPaginate
+                breakLabel='...'
+                nextLabel='>'
+                onPageChange={changePage}
+                pageRangeDisplayed={5}
+                pageCount={count}
+                initialPage={page}
+                previousLabel='<'
+                renderOnZeroPageCount={null}
+                disableInitialCallback
+                breakClassName='page-item'
+                breakLinkClassName='page-link'
+                containerClassName='pagination'
+                pageClassName='page-item'
+                pageLinkClassName='page-link'
+                previousClassName='page-item'
+                previousLinkClassName='page-link'
+                nextClassName='page-item'
+                nextLinkClassName='page-link'
+                activeClassName='active'
+              />
             </div>
           </div>
         ) : (

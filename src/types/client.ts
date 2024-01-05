@@ -11,6 +11,7 @@ export interface IClientStore {
   isLoading: boolean
   client: ClientDataType | null
   clients: TClients[] | null
+  count: number
   success: boolean
   isError: boolean
   err_msg: null | { msg: string; param: string }[]

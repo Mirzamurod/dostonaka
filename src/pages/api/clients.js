@@ -16,26 +16,30 @@ export default async function handler(req, res) {
 
   if (!user) res.status(400).json({ success: false, message: 'User not found !!!' })
   else {
-    const { limit, page, sortName, sortValue, id } = req.query
+    const { limit, page, sortName, sortValue, id, search } = req.query
+
     if (id) {
       const client = await Client.findById(decode(id))
 
       if (client) res.status(200).json(client)
       else res.status(400).json({ message: 'Klient topilmadi', success: false })
-    } else if (+limit && +page) {
-      const clients = await Client.find({ user: user._id })
+    } else {
+      const clients = await Client.find({
+        user: user._id,
+        name: { $regex: search ?? '', $options: 'i' },
+      })
         .sort(sortValue ? { [sortName]: sortValue } : sortName)
-        .limit(+limit)
-        .skip(+limit * (+page - 1))
+        .limit(20)
+        .skip(20 * +page)
+      // .limit(+limit ?? 20)
+      // .skip((+limit ?? 20) * (+page - 1))
 
-      const pageLists = Math.ceil((await Client.find({ user: user._id })).length / limit)
+      const pageLists = Math.ceil(
+        (await Client.find({ user: user._id, name: { $regex: search ?? '', $options: 'i' } }))
+          .length / 20
+      )
 
       res.status(200).json({ data: clients, pageLists, page })
-    } else {
-      const clients = await Client.find({ user: user._id }).sort(
-        sortValue ? { [sortName]: sortValue } : sortName
-      )
-      res.status(200).json({ data: clients })
     }
   }
 }

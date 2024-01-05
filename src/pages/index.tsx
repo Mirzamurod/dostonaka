@@ -6,13 +6,13 @@ import { PlusIcon } from '@heroicons/react/20/solid'
 import { Fragment, useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import DatePicker from 'react-datepicker'
-import dayjs from 'dayjs'
 import { TOrder, TViewOrderData } from '@/types/order'
 import ViewModal from '@/components/ViewModal'
 import { getSum } from '@/components/funcs'
 import PopConfirm from '@/components/PopConfirm'
 import { toast } from 'react-toastify'
 import { add, format, getDaysInMonth, startOfMonth } from 'date-fns'
+import ReactPaginate from 'react-paginate'
 
 export default function Home() {
   const dispatch = useDispatch()
@@ -22,6 +22,7 @@ export default function Home() {
   const [edit, setEdit] = useState(false)
   const [id, setId] = useState<string>('')
   const [search, setSearch] = useState<string>('')
+  const [page, setPage] = useState<number>(0)
   const [select, setSelect] = useState<'day' | 'month'>('month')
   const [data, setData] = useState<(TOrder & { date: string }) | null>(null)
   const [dataView, setDataView] = useState<TViewOrderData | null>(null)
@@ -29,7 +30,6 @@ export default function Home() {
     select === 'day'
       ? new Date().setDate(new Date().getDate() - 7)
       : new Date(`${format(new Date(), 'MM')}/01/${format(new Date(), 'yyyy')}`)
-    // : new Date(`${dayjs(new Date()).format('MM')}.01.${dayjs(new Date()).format('YYYY')}`)
   )
   const [endDate, setEndDate] = useState(new Date())
   const [month, setMonth] = useState(new Date())
@@ -49,9 +49,7 @@ export default function Home() {
         )
   )
 
-  const { isLoading, orders, success } = useSelector((state: RootState) => state.order)
-
-  // const addDay = (num: number) => dayjs(new Date(startDate)).add(num, 'day').format('DD.MM.YYYY')
+  const { isLoading, orders, success, count } = useSelector((state: RootState) => state.order)
 
   const addDayFns = (num: number) => format(add(new Date(startDate), { days: num }), 'dd.MM.yyyy')
 
@@ -77,6 +75,8 @@ export default function Home() {
         // @ts-ignore
         setDates(Math.floor(Number(new Date() - startDate) / 1000 / 60 / 60 / 24 + 4))
         setEndDate(new Date())
+        setPage(0)
+
         dispatch(
           getOrders({
             startDate: formatFnsM(startDate),
@@ -86,14 +86,20 @@ export default function Home() {
             ),
             select,
             search,
+            page: 0,
           })
         )
       } else {
         // @ts-ignore
         setDates(Math.floor(Number(endDate - startDate) / 1000 / 60 / 60 / 24 + 1))
-        dispatch(getOrders({ startDate: formatFnsM(startDate), dates, select, search }))
+        setPage(0)
+
+        dispatch(getOrders({ startDate: formatFnsM(startDate), dates, select, search, page: 0 }))
       }
-    } else dispatch(getOrders({ startDate: formatFnsM(startDate), dates, select, search }))
+    } else {
+      dispatch(getOrders({ startDate: formatFnsM(startDate), dates, select, search, page: 0 }))
+      setPage(0)
+    }
   }
 
   const addOrder = (data: TOrder, date: string) => {
@@ -111,6 +117,8 @@ export default function Home() {
     if (select === 'day') {
       setStartDate(new Date().setDate(new Date().getDate() - 7))
       setEndDate(new Date())
+      setPage(0)
+
       dispatch(
         getOrders({
           startDate: formatFnsM(new Date().setDate(new Date().getDate() - 7)),
@@ -125,6 +133,7 @@ export default function Home() {
           ),
           select,
           search: '',
+          page: 0,
         })
       )
 
@@ -142,6 +151,7 @@ export default function Home() {
       setStartDate(startOfMonth(new Date()))
       setDates(getDaysInMonth(new Date()))
       setSearch('')
+      setPage(0)
 
       dispatch(
         getOrders({
@@ -149,6 +159,7 @@ export default function Home() {
           dates: getDaysInMonth(new Date()),
           select,
           search: '',
+          page: 0,
         })
       )
     }
@@ -159,23 +170,10 @@ export default function Home() {
     toast.success("Ko'piya qilindi.")
   }
 
-  // useEffect(() => {
-  //   if (select === 'month') {
-  //     const day = `${format(new Date(), 'MM')}/01/${format(new Date(), 'yyyy')}`
-  //     let nextMonth = format(
-  //       add(
-  //         new Date(
-  //           `${format(add(new Date(), { months: 1 }), 'MM')}/01/${format(new Date(), 'yyyy')}`
-  //         ),
-  //         { days: -1 }
-  //       ),
-  //       'dd'
-  //     )
-
-  //     setStartDate(day)
-  //     setDates(Number(nextMonth))
-  //   }
-  // }, [month, select])
+  const changePage = ({ selected }: { selected: number }) => {
+    setPage(selected)
+    dispatch(getOrders({ startDate: formatFnsM(startDate), dates, select, search, page: selected }))
+  }
 
   useEffect(() => {
     if (select === 'day') {
@@ -198,12 +196,12 @@ export default function Home() {
   }, [select])
 
   useEffect(() => {
-    dispatch(getOrders({ startDate: formatFnsM(startDate), dates, select, search }))
+    dispatch(getOrders({ startDate: formatFnsM(startDate), dates, select, search, page }))
   }, [])
 
   useEffect(() => {
     if (success) {
-      dispatch(getOrders({ startDate: formatFnsM(startDate), dates, select, search }))
+      dispatch(getOrders({ startDate: formatFnsM(startDate), dates, select, search, page }))
       setOpen(false)
     }
   }, [success])
@@ -224,7 +222,7 @@ export default function Home() {
     <Fragment>
       <div className='mx-auto container p-6 lg:px-8'>
         <div className='pb-10'>
-          <div className='mt-8 flow-root'>
+          <div className='flow-root'>
             <div className='-mx-4 -my-2 sm:-mx-6 lg:-mx-8'>
               <div className='inline-block w-full py-2 align-middle sm:px-6 lg:px-8'>
                 <div className='flex justify-end items-center text-black mb-5 sm:flex-row flex-col'>
@@ -285,148 +283,168 @@ export default function Home() {
                 {isLoading ? (
                   'Loading...'
                 ) : !isLoading && orders?.orders?.length ? (
-                  <div className='block w-full overflow-x-auto'>
-                    <table className='divide-y divide-gray-700 text-white w-full min-w-full'>
-                      <thead>
-                        <tr className='divide-x divide-[#3e3e3e]'>
-                          <th
-                            scope='col'
-                            className='py-3.5 pl-4 pr-3 text-left text-sm font-semibold flex items-center min-w-[220px]'
-                          >
-                            Name
-                          </th>
-                          {[...new Array(dates)].map((_, index) => (
-                            <th
-                              key={index}
-                              scope='col'
-                              className='px-3 py-3.5 text-left text-sm font-semibold min-w-[220px]'
-                            >
-                              {addDayFns(index)}
-                            </th>
-                          ))}
-                          <th
-                            scope='col'
-                            className='px-3 py-3.5 text-left text-sm font-semibold min-w-[220px]'
-                          >
-                            Total
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className='divide-y divide-gray-800'>
-                        {orders.orders?.map(order => (
-                          <tr key={order._id} className='divide-x divide-[#3e3e3e]'>
-                            <td className='whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium'>
-                              {order.name}
-                            </td>
-                            {[...new Array(dates)].map((_, index) => (
-                              <td
-                                key={index}
-                                scope='col'
-                                className='px-3 py-3.5 text-left text-sm text-gray-300'
-                              >
-                                {Object.keys(
-                                  order?.orders?.find(item => item.date === addDayFns(index)) || {}
-                                ).length ? (
-                                  <div
-                                    onClick={() => {
-                                      view({
-                                        ...order?.orders?.find(
-                                          item => item.date === addDayFns(index)
-                                        ),
-                                        name: order.name,
-                                      })
-                                      setData({
-                                        ...order,
-                                        date: addDayFns(index),
-                                        order: order?.orders?.find(
-                                          item => item.date === addDayFns(index)
-                                        ),
-                                      })
-                                      setId(
-                                        order?.orders?.find(item => item.date === addDayFns(index))
-                                          ?._id as string
-                                      )
-                                    }}
+                  <div className='mt-8 flow-root'>
+                    <div className='-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8'>
+                      <div className='inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8'>
+                        <div className='block w-full overflow-x-auto'>
+                          <table className='divide-y divide-gray-700 text-white w-full min-w-full'>
+                            <thead>
+                              <tr className='divide-x divide-[#3e3e3e]'>
+                                <th
+                                  scope='col'
+                                  className='py-3.5 pl-4 pr-3 text-left text-sm font-semibold flex items-center min-w-[220px]'
+                                >
+                                  Name
+                                </th>
+                                {[...new Array(dates)].map((_, index) => (
+                                  <th
+                                    key={index}
+                                    scope='col'
+                                    className='px-3 py-3.5 text-left text-sm font-semibold min-w-[220px]'
                                   >
-                                    <p>
-                                      Soni:{' '}
-                                      {
-                                        order?.orders?.find(item => item.date === addDayFns(index))
-                                          ?.count
-                                      }
-                                    </p>
-                                    <p>
-                                      1tasi narxi:{' '}
-                                      {getSum(
-                                        order?.orders?.find(item => item.date === addDayFns(index))
-                                          ?.price as string
+                                    {addDayFns(index)}
+                                  </th>
+                                ))}
+                                <th
+                                  scope='col'
+                                  className='px-3 py-3.5 text-left text-sm font-semibold min-w-[220px]'
+                                >
+                                  Total
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className='divide-y divide-gray-800'>
+                              {orders.orders?.map(order => (
+                                <tr key={order._id} className='divide-x divide-[#3e3e3e]'>
+                                  <td className='whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium'>
+                                    {order.name}
+                                  </td>
+                                  {[...new Array(dates)].map((_, index) => (
+                                    <td
+                                      key={index}
+                                      scope='col'
+                                      className='px-3 py-3.5 text-left text-sm text-gray-300'
+                                    >
+                                      {Object.keys(
+                                        order?.orders?.find(
+                                          item => item.date === addDayFns(index)
+                                        ) || {}
+                                      ).length ? (
+                                        <div
+                                          onClick={() => {
+                                            view({
+                                              ...order?.orders?.find(
+                                                item => item.date === addDayFns(index)
+                                              ),
+                                              name: order.name,
+                                            })
+                                            setData({
+                                              ...order,
+                                              date: addDayFns(index),
+                                              order: order?.orders?.find(
+                                                item => item.date === addDayFns(index)
+                                              ),
+                                            })
+                                            setId(
+                                              order?.orders?.find(
+                                                item => item.date === addDayFns(index)
+                                              )?._id as string
+                                            )
+                                          }}
+                                        >
+                                          <p>
+                                            Soni:{' '}
+                                            {
+                                              order?.orders?.find(
+                                                item => item.date === addDayFns(index)
+                                              )?.count
+                                            }
+                                          </p>
+                                          <p>
+                                            1tasi narxi:{' '}
+                                            {getSum(
+                                              order?.orders?.find(
+                                                item => item.date === addDayFns(index)
+                                              )?.price as string
+                                            )}
+                                          </p>
+                                          <p>
+                                            Narxi:{' '}
+                                            {getSum(
+                                              order?.orders?.find(
+                                                item => item.date === addDayFns(index)
+                                              )?.item_price as number
+                                            )}
+                                          </p>
+                                        </div>
+                                      ) : (
+                                        <div className='flex'>
+                                          <Button onClick={() => addOrder(order, addDayFns(index))}>
+                                            <PlusIcon
+                                              className='h-5 w-5 m-auto'
+                                              aria-hidden='true'
+                                            />
+                                          </Button>
+                                          <div className='ml-2'>
+                                            <p>{order.name}</p>
+                                            <p>{addDayFns(index)}</p>
+                                          </div>
+                                        </div>
                                       )}
-                                    </p>
-                                    <p>
-                                      Narxi:{' '}
-                                      {getSum(
-                                        order?.orders?.find(item => item.date === addDayFns(index))
-                                          ?.item_price as number
-                                      )}
-                                    </p>
-                                  </div>
-                                ) : (
-                                  <Button onClick={() => addOrder(order, addDayFns(index))}>
-                                    <PlusIcon className='h-5 w-5' aria-hidden='true' />
-                                  </Button>
-                                )}
-                              </td>
-                            ))}
-                            <td className='whitespace-nowrap px-3 py-3.5 pr-3 text-sm text-gray-300'>
-                              <div
-                                className='cursor-pointer'
-                                onClick={() =>
-                                  copyText(
-                                    `Ism: ${order.name},
+                                    </td>
+                                  ))}
+                                  <td className='whitespace-nowrap px-3 py-3.5 pr-3 text-sm text-gray-300'>
+                                    <div
+                                      className='cursor-pointer'
+                                      onClick={() =>
+                                        copyText(
+                                          `Ism: ${order.name},
 Soni: ${order.total_count} ta,
 Narxi: ${getSum(order.total_price)},
 Boshlanish sanasi: ${formatFnsM(startDate)},
 Tugash sanasi: ${addDayFns(Number(dates) - 1)}
 `
-                                  )
-                                }
-                              >
-                                <p>Umuniy soni: {order.total_count}</p>
-                                <p>Umumiy narxi: {getSum(order.total_price)}</p>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                        <tr className='divide-x divide-[#3e3e3e]'>
-                          <td className='whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium' />
-                          {[...new Array(dates)].map((_, index) => (
-                            <td
-                              scope='col'
-                              key={index}
-                              className='px-3 py-3.5 text-left text-sm text-gray-300'
-                            >
-                              <p>
-                                Umumiy soni:{' '}
-                                {orders.results.find(result => result.date === addDayFns(index))
-                                  ?.total_count ?? 0}
-                              </p>
-                              <p>
-                                Umumiy narxi:{' '}
-                                {getSum(
-                                  (orders.results.find(result => result.date === addDayFns(index))
-                                    ?.total_price as number) ?? 0
-                                )}
-                              </p>
-                              {/* <p>Umumiy soni: {result.total_count}</p> */}
-                              {/* <p>Umumiy narxi: {getSum(result.total_price)}</p> */}
-                            </td>
-                          ))}
-                          <td className='whitespace-nowrap px-3 py-3.5 pr-3 text-sm font-semibold text-gray-300'>
-                            <p>Umuniy soni: {total?.total_count}</p>
-                            <p>Umumiy narxi: {getSum(total?.total_price as number)}</p>
-                          </td>
-                        </tr>
-                        {/* <tr className='divide-x divide-[#3e3e3e]'>
+                                        )
+                                      }
+                                    >
+                                      <p>Umuniy soni: {order.total_count}</p>
+                                      <p>Umumiy narxi: {getSum(order.total_price)}</p>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                              <tr className='divide-x divide-[#3e3e3e]'>
+                                <td className='whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium' />
+                                {[...new Array(dates)].map((_, index) => (
+                                  <td
+                                    scope='col'
+                                    key={index}
+                                    className='px-3 py-3.5 text-left text-sm text-gray-300'
+                                  >
+                                    <p>
+                                      Umumiy soni:{' '}
+                                      {orders.results.find(
+                                        result => result.date === addDayFns(index)
+                                      )?.total_count ?? 0}
+                                    </p>
+                                    <p>
+                                      Umumiy narxi:{' '}
+                                      {getSum(
+                                        (orders.results.find(
+                                          result => result.date === addDayFns(index)
+                                        )?.total_price as number) ?? 0
+                                      )}
+                                    </p>
+                                    {/* <p>Umumiy soni: {result.total_count}</p> */}
+                                    {/* <p>Umumiy narxi: {getSum(result.total_price)}</p> */}
+                                  </td>
+                                ))}
+                                <td className='whitespace-nowrap px-3 py-3.5 pr-3 text-sm font-semibold text-gray-300'>
+                                  <p>Umuniy soni: {total?.total_count}</p>
+                                  <p>Umumiy narxi: {getSum(total?.total_price as number)}</p>
+                                </td>
+                              </tr>
+                              {/* <tr className='divide-x divide-[#3e3e3e]'>
                           <td
                             className='whitespace-nowrap px-3 py-3.5 pr-3 text-sm text-gray-300'
                             colSpan={dates + 1}
@@ -436,8 +454,34 @@ Tugash sanasi: ${addDayFns(Number(dates) - 1)}
                             <p>Umumiy narxi: {getSum(total?.total_price as number)}</p>
                           </td>
                         </tr> */}
-                      </tbody>
-                    </table>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                    <div id='react-paginate' className='w-full text-end mt-5'>
+                      <ReactPaginate
+                        breakLabel='...'
+                        nextLabel='>'
+                        onPageChange={changePage}
+                        pageRangeDisplayed={5}
+                        pageCount={count}
+                        initialPage={page}
+                        disableInitialCallback
+                        previousLabel='<'
+                        renderOnZeroPageCount={null}
+                        breakClassName='page-item'
+                        breakLinkClassName='page-link'
+                        containerClassName='pagination'
+                        pageClassName='page-item'
+                        pageLinkClassName='page-link'
+                        previousClassName='page-item'
+                        previousLinkClassName='page-link'
+                        nextClassName='page-item'
+                        nextLinkClassName='page-link'
+                        activeClassName='active'
+                      />
+                    </div>
                   </div>
                 ) : (
                   'No data'

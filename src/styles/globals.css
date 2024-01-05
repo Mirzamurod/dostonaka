@@ -57,4 +57,5 @@ body {
 
 #react-paginate li.active {
   outline: none;
+  border: 1px solid rgb(99 102 241);
 }

@@ -27,7 +27,7 @@ const Login = () => {
   } = useForm({
     mode: 'onTouched',
     resolver: yupResolver(formSchema),
-    defaultValues: { email: 'test@gmail.com', password: 'microlab1M*' },
+    defaultValues: { email: '', password: '' },
   })
 
   const { isLoading } = useSelector((state: RootState) => state.login)
@@ -59,10 +59,11 @@ const Login = () => {
                 id='email'
                 {...register('email')}
                 type='email'
+                placeholder='Email'
                 className={`text-sm rounded block w-full p-2.5 border ${
                   errors.email?.message
-                    ? 'bg-red-50 border-red-500 text-red-900 placeholder-red-700 focus:ring-red-500 focus:border-red-500'
-                    : ' border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-black'
+                    ? 'bg-white/5 border-red-500 text-red-900 placeholder-red-700 focus:ring-red-500 focus:border-red-500'
+                    : 'bg-white/5 border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                 }`}
               />
               {errors.email?.message ? (
@@ -94,10 +95,11 @@ const Login = () => {
                 id='password'
                 {...register('password')}
                 type='password'
+                placeholder='Parol'
                 className={`text-sm rounded block w-full p-2.5 border ${
                   errors.password?.message
-                    ? 'bg-red-50 border-red-500 text-red-900 placeholder-red-700 focus:ring-red-500 focus:border-red-500'
-                    : 'bg-gray-50 border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-black'
+                    ? 'bg-white/5 border-red-500 text-red-900 placeholder-red-700 focus:ring-red-500 focus:border-red-500'
+                    : 'bg-white/5 border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                 }`}
               />
               {errors.password?.message ? (

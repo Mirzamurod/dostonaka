@@ -13,7 +13,6 @@ const register = createSlice({
       state.isError = false
     },
     onSuccess: (state, { payload }) => {
-      console.log(payload)
       state.isLoading = false
     },
     onFail: (state, { payload }) => {

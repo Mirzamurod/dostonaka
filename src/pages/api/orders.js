@@ -18,7 +18,7 @@ export default async function handler(req, res) {
 
   if (!user) res.status(400).json({ success: false, message: 'User not found !!!' })
   else {
-    const { id, startDate, year, dates, search } = req.query
+    const { limit, page, sortName, sortValue, id, startDate, year, dates, search } = req.query
 
     const addDay = num => dayjs(startDate).add(num, 'day').format('DD.MM.YYYY')
     let datesArr = []
@@ -37,6 +37,16 @@ export default async function handler(req, res) {
         show: true,
         name: { $regex: search ?? '', $options: 'i' },
       })
+        .sort(sortValue ? { [sortName]: sortValue } : sortName)
+        .limit(20)
+        .skip(20 * +page)
+      // .limit(+limit ?? 20)
+      // .skip((+limit ?? 20) * (+page - 1))
+
+      const pageLists = Math.ceil(
+        (await Client.find({ user: user._id, name: { $regex: search ?? '', $options: 'i' } }))
+          .length / 20
+      )
 
       for (const client of orders) {
         client._doc.orders = []
@@ -73,7 +83,7 @@ export default async function handler(req, res) {
         }
       }
 
-      res.status(200).json({ orders, results })
+      res.status(200).json({ orders, results, pageLists, page })
     } else {
       let orders
       let results = []
@@ -87,6 +97,16 @@ export default async function handler(req, res) {
         show: true,
         name: { $regex: search ?? '', $options: 'i' },
       })
+        .sort(sortValue ? { [sortName]: sortValue } : sortName)
+        .limit(20)
+        .skip(20 * +page)
+      // .limit(+limit ?? 20)
+      // .skip((+limit ?? 20) * (+page - 1))
+
+      const pageLists = Math.ceil(
+        (await Client.find({ user: user._id, name: { $regex: search ?? '', $options: 'i' } }))
+          .length / 20
+      )
 
       for (const client of orders) {
         client._doc.orders = []
@@ -114,7 +134,7 @@ export default async function handler(req, res) {
         })
       }
 
-      res.status(200).json({ orders, results })
+      res.status(200).json({ orders, results, pageLists, page })
     }
   }
 }
