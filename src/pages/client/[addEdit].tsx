@@ -17,14 +17,6 @@ const AddClient = () => {
     name: yup.string().required('Klient ismini yozish shart'),
     price: user?.price ? yup.string() : yup.string().required('1ta mahsulot narxini yozish shart'),
   })
-  // .required('1ta mahsulot narxini yozish shart')
-  // .when('filter_sort_key', {
-  //   is: filter_sort_key => filter_sort_key && filter_sort_key.length > 0,
-  //   then: Yup.array().of(
-  //     Yup.object().shape({ name: Yup.string().required('This field is required') })
-  //   ),
-  //   otherwise: Yup.array().of(Yup.object().shape({ name: Yup.string() })),
-  // })
   const {
     register,
     handleSubmit,

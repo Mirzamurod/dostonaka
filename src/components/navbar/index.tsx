@@ -14,7 +14,7 @@ interface IProps {
 
 const navigation = [
   { name: 'Home', href: '/' },
-  { name: 'Yillik', href: '/reports' },
+  // { name: 'Yillik', href: '/reports' },
   { name: 'Klientlar', href: '/clients' },
   { name: 'Settings', href: '/settings' },
 ]
