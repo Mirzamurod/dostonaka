@@ -75,7 +75,7 @@ export const getClient = (id: string) =>
     onFail: login.actions.onFail.type,
   })
 
-export const addClient = (data: { name: string; price: string }) =>
+export const addClient = (data: { name: string; price: string | number }) =>
   project({
     url: addclient,
     method: 'post',

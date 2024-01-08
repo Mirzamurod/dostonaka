@@ -1,7 +1,8 @@
 export type UserDataType = {
   username: string
-  name: string
   email: string
+  price: number
+  phone: string
   isAdmin?: boolean
   createdAt: string
   updatedAt: string
@@ -10,12 +11,11 @@ export type UserDataType = {
 
 export interface IUserStore {
   isLoading: boolean
+  success: boolean
   user: UserDataType | null
   isError: boolean
-  code: string | boolean
   err_msg: string
   dark_mode: boolean
-  deleteCode: string | boolean
   token: boolean
 }
 

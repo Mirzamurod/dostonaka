@@ -12,10 +12,19 @@ import Link from 'next/link'
 const AddClient = () => {
   const dispatch = useDispatch()
   const router = useRouter()
+  const { user } = useSelector((state: RootState) => state.login)
   const formSchema = yup.object().shape({
     name: yup.string().required('Klient ismini yozish shart'),
-    price: yup.string().required('1ta mahsulot narxini yozish shart'),
+    price: user?.price ? yup.string() : yup.string().required('1ta mahsulot narxini yozish shart'),
   })
+  // .required('1ta mahsulot narxini yozish shart')
+  // .when('filter_sort_key', {
+  //   is: filter_sort_key => filter_sort_key && filter_sort_key.length > 0,
+  //   then: Yup.array().of(
+  //     Yup.object().shape({ name: Yup.string().required('This field is required') })
+  //   ),
+  //   otherwise: Yup.array().of(Yup.object().shape({ name: Yup.string() })),
+  // })
   const {
     register,
     handleSubmit,
@@ -50,9 +59,18 @@ const AddClient = () => {
       )
   }, [success, err_msg])
 
-  const onSubmit = (values: { name: string; price: string }) => {
-    if (router.query.addEdit === 'add') dispatch(addClient(values))
-    else dispatch(editClient(values, router.query.addEdit as string))
+  const onSubmit = (values: { name: string; price?: string }) => {
+    if (router.query.addEdit === 'add')
+      // @ts-ignore
+      dispatch(addClient({ ...values, price: values.price || user?.price }))
+    else
+      dispatch(
+        editClient(
+          // @ts-ignore
+          { ...values, price: values.price || user?.price },
+          router.query.addEdit as string
+        )
+      )
   }
 
   return (
@@ -92,7 +110,7 @@ const AddClient = () => {
             <label
               htmlFor='price'
               className={`block text-sm font-medium leading-6 ${
-                errors.name?.message ? 'text-red-700' : 'text-white'
+                errors.price?.message ? 'text-red-700' : 'text-white'
               }`}
             >
               1ta mahsulot narxi
@@ -102,7 +120,7 @@ const AddClient = () => {
                 id='price'
                 type='text'
                 {...register('price')}
-                placeholder='1ta mahsulot narxi'
+                placeholder={user?.price ? user.price.toString() : '1ta mahsulot narxi'}
                 className={`text-sm rounded block w-full p-2.5 border ${
                   errors.price?.message
                     ? 'bg-white/5 border-red-500 text-red-900 placeholder-red-700 focus:ring-red-500 focus:border-red-500'

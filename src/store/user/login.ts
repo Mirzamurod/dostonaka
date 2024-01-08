@@ -1,17 +1,16 @@
 import { createSlice } from '@reduxjs/toolkit'
-import { project, loginUser, userprofile } from '@/store/apis'
+import { project, loginUser, userprofile, edituser } from '@/store/apis'
 import { IUserStore } from '@/types/user'
 import { encode } from 'js-base64'
 
 const initialState: IUserStore = {
   isLoading: false,
+  success: false,
   user: null,
   isError: false,
-  code: '',
   token: false,
   err_msg: '',
   dark_mode: false,
-  deleteCode: '',
 }
 
 const login = createSlice({
@@ -34,17 +33,15 @@ const login = createSlice({
       state.user = payload.data
       state.dark_mode = payload.data.dark_mode
       state.err_msg = payload.message
-      state.code = ''
     },
     userUpdate: (state, { payload }) => {
       state.isLoading = false
+      state.success = payload.success
       state.isError = false
-      state.code = payload.message.code
     },
     userDelete: (state, { payload }) => {
       state.isLoading = false
       state.isError = false
-      state.deleteCode = payload.code
     },
     onFail: (state, { payload }) => {
       state.isLoading = false
@@ -55,6 +52,7 @@ const login = createSlice({
       state.dark_mode = !state.dark_mode
     },
     getUserData: (state, { payload }) => {
+      state.isLoading = false
       state.user = payload
     },
     deleteUser: state => {
@@ -84,15 +82,15 @@ export const userProfile = () =>
     onFail: login.actions.onFail.type,
   })
 
-// export const userUpdate = (data: any) =>
-//   project({
-//     url: userupdate,
-//     method: 'put',
-//     data,
-//     onStart: login.actions.onStart.type,
-//     onSuccess: login.actions.userUpdate.type,
-//     onFail: login.actions.onFail.type,
-//   })
+export const userUpdate = (data: any) =>
+  project({
+    url: edituser,
+    method: 'put',
+    data,
+    onStart: login.actions.onStart.type,
+    onSuccess: login.actions.userUpdate.type,
+    onFail: login.actions.onFail.type,
+  })
 
 // export const userDelete = (data: any) =>
 //   project({

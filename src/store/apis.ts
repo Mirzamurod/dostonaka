@@ -8,6 +8,7 @@ export const registerUser = 'users/add'
 export const loginUser = 'login'
 export const userprofile = 'profile'
 export const getUsersApi = 'users'
+export const edituser = 'edituser'
 
 // client
 export const clients = 'clients'

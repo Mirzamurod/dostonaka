@@ -27,7 +27,7 @@ const Login = () => {
   } = useForm({
     mode: 'onTouched',
     resolver: yupResolver(formSchema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: { email: 'test@gmail.com', password: 'microlab1M*' },
   })
 
   const { isLoading } = useSelector((state: RootState) => state.login)
