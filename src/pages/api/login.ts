@@ -8,23 +8,20 @@ const generateToken = (id: string) =>
   jwt.sign({ id }, process.env.ACCESS_TOKEN_SECRET!, { expiresIn: '14d' })
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { email, password } = req.body
-  if (email && password) {
+  const { phone } = req.body
+  if (phone) {
     await connectDB()
 
-    const user = await User.findOne({ email })
+    const user = await User.findOne({ phone })
     if (user) {
-      if (await bcryptjs.compare(password, user.password))
-        res.status(200).json({ token: generateToken(user._id), code: 0 })
-      else
-        res.status(400).json({
-          success: false,
-          message: [{ msg: 'Password is wrong', param: 'password' }],
-        })
-    } else
-      res.status(400).json({
-        success: false,
-        message: [{ msg: 'User not found', param: 'email' }],
-      })
+      res.status(200).json({ token: generateToken(user._id) })
+      // if (await bcryptjs.compare(password, user.password))
+      //   res.status(200).json({ token: generateToken(user._id), code: 0 })
+      // else
+      //   res.status(400).json({
+      //     success: false,
+      //     message: [{ msg: 'Password is wrong', param: 'password' }],
+      //   })
+    } else res.status(400).json({ success: false, message: 'User not found' })
   }
 }
